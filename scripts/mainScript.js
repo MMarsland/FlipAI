@@ -1,116 +1,7 @@
 var gameBoard;
 var yellowPiece;
 
- class Block {
-   constructor (id, x_offset, y_offset, piece) {
-     this.id = id;
-     this.piece = piece;
-     this.x_offset = x_offset;
-     this.y_offset = y_offset;
-   }
-
-   display() {
-     let board = document.getElementById("board");
-     let block = document.createElement("div");
-     block.setAttribute("class", "block");
-     block.setAttribute("style", "left: "+(50*(this.x_offset+this.piece.x_offset-2))+"px");
-     block.setAttribute("style", block.getAttribute("style")+"; top: "+(50*(this.y_offset+this.piece.y_offset-2))+"px");
-     block.setAttribute("style", block.getAttribute("style")+"; background-color: "+this.piece.color);
-     board.appendChild(block);
-   }
- }
-
- class Piece {
-   constructor (id, x_offset, y_offset, height, width, color, alive) {
-     this.id = id;
-     this.x_offset = x_offset;
-     this.y_offset = y_offset;
-     this.height = height;
-     this.width = width;
-     this.color = color;
-     this.alive = alive;
-     this.blocks = [];
-   }
-
-   display() {
-     //Display Blocks
-     for (let i=0;i<this.blocks.length;i++)
-     {
-       this.blocks[i].display();
-     }
-   }
-
-
-   flip(direction) {
-     if (direction == "up") {
-       //Make new blocks positioned relative to location
-       //Add them to the piece, redisplay piece
-       let newBlocks = [];
-       for (let i=0;i<this.blocks.length;i++){
-         //height - offset + 1 is new offset
-        let block = new Block(null, this.blocks[i].x_offset, (this.height - this.blocks[i].y_offset + 1), this);
-        this.blocks[i].y_offset += this.height;
-        newBlocks.push(block);
-       }
-       for (let i=0;i<newBlocks.length;i++){
-         this.blocks.push(newBlocks[i])
-       }
-       this.y_offset -= this.height;
-       this.height *= 2;
-     //} else if (direction.equals("right")) {
-
-     } else if (direction == "down") {
-       let newBlocks = [];
-       for (let i=0;i<this.blocks.length;i++){
-         //height - offset + 1 is new offset
-        let block = new Block(null, this.blocks[i].x_offset, (this.height - this.blocks[i].y_offset + 1), this);
-        block.y_offset += this.height;
-        newBlocks.push(block);
-       }
-       for (let i=0;i<newBlocks.length;i++){
-         this.blocks.push(newBlocks[i])
-       }
-       this.height *= 2;
-     //} else if (direction.equals("right")) {
-
-     }
-     this.display();
-   }
- }
-
- class Board {
-    constructor (height, width) {
-      this.height = height;
-      this.width = width;
-      this.x_offset = 1;
-      this.y_offset = 1;
-      this.pieces = [];
-      this.color = "lightgray";
-   }
-
-   display() {
-     let board = document.getElementById("board");
-     board.style.height = ""+(this.height*50)+"px";
-     board.style.width = ""+(this.width*50)+"px";
-     this.populate();
-     //Display Pieces
-     for (let i=0;i<this.pieces.length;i++)
-     {
-       this.pieces[i].display();
-     }
-
-   }
-
-   populate() {
-     console.log("Populating");
-     for (let i=1; i<=this.height;i++){
-       for(let j=1; j<=this.width;j++){
-         let block = new Block(null, j, i, gameBoard);
-         block.display();
-       }
-     }
-   }
- }
+var selectEvent = null;
 
  function main() {
    // Level one
@@ -137,4 +28,68 @@ var yellowPiece;
    gameBoard.pieces = [bluePiece,greenPiece,yellowPiece,redPiece];
 
    gameBoard.display();
+ }
+
+
+ function selectBlock(e) {
+   e.preventDefault();
+
+   selectEvent = e;
+   setCursor("grabbing");
+ }
+
+ function mouseReleased(e) {
+   e.preventDefault();
+   if (selectEvent) {
+
+     setCursor("grab");
+
+     let piece;
+     let pieceId = selectEvent.target.attributes.piece.nodeValue;
+     console.log(pieceId);
+     if (pieceId > 0) {
+       piece = getPieceById(pieceId);
+       //direction
+       piece.flip(getDirectionOfMove(selectEvent, e));
+     }
+     selectEvent = null;
+   }
+ }
+
+ function getPieceById(pieceId) {
+   //Just a comment
+   for (pieceIndex in gameBoard.pieces){ piece = gameBoard.pieces[pieceIndex];
+     if (piece.id == pieceId){
+       return piece;
+     }
+   }
+ }
+
+ function setCursor(cursorType) {
+   document.getElementById("main").style.cursor = cursorType;
+ }
+
+ function getDirectionOfMove(start, end) {
+   let startX = start.clientX;
+   let startY = start.clientY;
+   let endX = end.clientX;
+   let endY = end.clientY;
+   let deltaX = endX - startX;
+   let deltaY = endY - startY;
+
+   if (Math.abs(deltaX) > Math.abs(deltaY)){
+     //Moving in the x
+     if (deltaX >= 0) {
+       return "right";
+     } else {
+       return "left";
+     }
+   } else {
+     //Moving in the y
+     if (deltaY >= 0) {
+       return "down";
+     } else {
+       return "up";
+     }
+   }
  }
